@@ -5,16 +5,15 @@ int	init_file(t_file *file) {
 	if (fd == -1)
 		return ft_printf("open: '%s': can't open file\n"), 1;
 
-	struct stat file_stat;
-	if (fstat(fd, &file_stat) == -1) {
+	if (fstat(fd, &file->stat) == -1) {
 		ft_printf("fstat: '%s': can't stat file\n");
 		return 1;
 	}
-	if (file_stat.st_size < (off_t)sizeof(Elf32_Ehdr))
+	if (file->stat.st_size < (off_t)sizeof(Elf32_Ehdr))
 		return ft_printf("'%s': file too small to be ELF"), 1;
 	file->fd = fd;
 
-	file->data = mmap(NULL, file_stat.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	file->data = mmap(NULL, file->stat.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (file->data == MAP_FAILED || !file->data) {
 		ft_printf("mmap: '%s': can't map file\n");
 		return 1;

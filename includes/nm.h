@@ -32,12 +32,17 @@ typedef struct {
 typedef struct {
 	const char *path;
 	int fd;
+	struct stat stat;
 	void* data;
 	size_t data_size;
-	int	elfclass;
-	Elf64_Shdr *shdr64;
-	Elf32_Shdr *shdr32;
 	t_list *symbols;
+	int	elfclass;
+
+	Elf64_Shdr *shdr64;
+	Elf64_Ehdr *ehdr64;
+
+	Elf32_Shdr *shdr32;
+	Elf32_Ehdr *ehdr32;
 } t_file;
 
 // error.c

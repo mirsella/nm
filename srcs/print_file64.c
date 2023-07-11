@@ -38,12 +38,22 @@ int	print_file64(t_file *file, t_options options) {
 	(void)options;
 
 	Elf64_Ehdr *header = file->data;
+	file->ehdr64 = header;
+	if (header->e_shoff > (size_t)file->stat.st_size)
+		return ft_printf("'%s': error e_shoff bigger than file size\n", file->path), 1;
 	Elf64_Shdr *sections = file->data + header->e_shoff;
 	file->shdr64 = sections;
+	if (sections->sh_size != 0 && sections->sh_offset != 0)
+		return ft_printf("'%s': error bad section\n", file->path), 1;
+	if (header->e_shstrndx >= header->e_shnum || sections[header->e_shstrndx].sh_type != SHT_STRTAB)
+		return ft_printf("'%s': error bad section header\n", file->path), 1;
+
 
 	Elf64_Shdr *symtab_section = NULL;
 	Elf64_Shdr *strtab_section = NULL;
 	for (int i = 0; i < header->e_shnum; ++i) {
+		if (sections[i].sh_name > sections[header->e_shstrndx].sh_size)
+			return ft_printf("'%s': error bad section header at %d\n", file->path, i), 1;
 		if (sections[i].sh_type == SHT_SYMTAB) {
 			symtab_section = &sections[i];
 			strtab_section = &sections[sections[i].sh_link];
@@ -54,33 +64,40 @@ int	print_file64(t_file *file, t_options options) {
 		return ft_printf("'%s': no symbol table found\n", file->path), 1;
 
 	Elf64_Sym *symbol_table = file->data + symtab_section->sh_offset;
-	int symbol_count = symtab_section->sh_size / symtab_section->sh_entsize;
 	char	*strtab = file->data + strtab_section->sh_offset;
-	for (int i = 0; i < symbol_count; ++i) {
+	for (int i = 0; i < ft_ceil((double)symtab_section->sh_size / (double)sizeof(Elf64_Sym)); ++i) {
 
-		if (!symbol_table[i].st_info && !symbol_table[i].st_value)
+		uint16_t st_shndx = symbol_table[i].st_shndx;
+		Elf64_Sym *sym = &symbol_table[i];
+		if (!sym->st_info && !sym->st_value)
 			continue; // no name and address
-		if (!options.display_all && ELF64_ST_TYPE(symbol_table[i].st_info) == STT_FILE)
-			continue; // don't show debug symbol without -a
-		if (options.display_global && ELF64_ST_BIND(symbol_table[i].st_info) == STB_LOCAL)
-			continue ; // don't show local symbol with -g
-		if (options.display_undefined && symbol_table[i].st_value)
-			continue ; // don't show defined symbol with -u
+		if (options.display_undefined && st_shndx == SHN_UNDEF) {} // don't show undefined symbol without -u
+		else if (options.display_global && (ELF64_ST_BIND(sym->st_info) == STB_GLOBAL || ELF64_ST_BIND(sym->st_info) == STB_WEAK)) {}  // don't show global symbol without -g
+		else if (options.display_all) {}
+		else if (!(st_shndx == SHN_LOPROC || st_shndx == SHN_BEFORE || st_shndx == SHN_AFTER ||
+				st_shndx == SHN_HIPROC || st_shndx == SHN_LOOS || st_shndx == SHN_HIOS ||
+				st_shndx == SHN_ABS || st_shndx == SHN_COMMON || st_shndx == SHN_XINDEX ||
+				st_shndx == SHN_HIRESERVE) && ELF64_ST_TYPE(sym->st_info) != STT_SECTION) {}
+		else
+			continue;
 
 		t_symbol *symbol = malloc(sizeof(t_symbol));
 		if (!symbol)
 			return ft_putstr("memory allocation failed\n"), -1;
 		bzero(symbol, sizeof(t_symbol));
-		symbol->sym64 = &symbol_table[i];
+		symbol->sym64 = sym;
 		symbol->addr64 = &symbol_table[i].st_value;
 		symbol->name = strtab + symbol_table[i].st_name;
+		if (symbol_table[i].st_shndx < header->e_shnum) {
+			if (ELF64_ST_TYPE(symbol_table[i].st_info) == STT_SECTION)
+				symbol->name = (file->data + sections[header->e_shstrndx].sh_offset) + sections[symbol_table[i].st_shndx].sh_name;
+		}
 		t_list *new = ft_lstnew(symbol);
 		if (!new)
 			return ft_putstr("memory allocation failed\n"), -1;
 		ft_lstadd_back(&file->symbols, new);
 	}
 
-	// TODO: sort symbols according to options
 	if (!options.no_sort)
 		ft_lstsort(&file->symbols, &compare_symbol64);
 	if (!options.no_sort && options.reverse_sort)
