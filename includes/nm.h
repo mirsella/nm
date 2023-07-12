@@ -11,13 +11,15 @@
 #include <sys/mman.h>
 #include <elf.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef struct {
-	unsigned int display_all;
-	unsigned int display_global;
-	unsigned int display_undefined;
-	unsigned int no_sort;
-	unsigned int reverse_sort;
+	bool display_all;
+	bool display_global;
+	bool display_undefined;
+	bool no_sort;
+	bool reverse_sort;
+  bool print_file_name;
 } t_options;
 
 typedef struct {
@@ -27,6 +29,7 @@ typedef struct {
 	Elf32_Sym *sym32;
 	Elf32_Addr *addr32;
 	char *name;
+	uint16_t index;
 } t_symbol;
 
 typedef struct {
@@ -52,11 +55,13 @@ void empty_file(t_file *file);
 int	init_file(t_file *file);
 
 // print_file.c
-int	print_file64(t_file *file, t_options options);
+int	print_file64(t_file *file, t_options *options);
 
 // print_file.c
-int	print_file32(t_file *file, t_options options);
+int	print_file32(t_file *file, t_options *options);
 
 // print_symbol.c
 int	print_symbol64(t_file *file, t_symbol *symbol);
 char get_type64(t_file *file, t_symbol *symbol);
+int	print_symbol32(t_file *file, t_symbol *symbol);
+char get_type32(t_file *file, t_symbol *symbol);

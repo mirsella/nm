@@ -71,7 +71,7 @@ char get_type64(t_file *file, t_symbol *symbol) {
 	else if (st_shndx < e_shnum) {
 		uint32_t sh_type = file->shdr64[st_shndx].sh_type;
 		uint64_t sh_flags = file->shdr64[st_shndx].sh_flags;
-		/* printf("sh_type: %d, SHT_PROGBITS: %d, sh_flags: %lu, (): %d\n", sh_type, SHT_PROGBITS, sh_flags, (SHF_ALLOC | SHF_EXECINSTR)); */
+		/* printf("sh_type: %d, SHT_PROGBITS: %d, SHT_DYNAMIC %d, sh_flags: %lu, (): %d\n", sh_type, SHT_PROGBITS, SHT_DYNAMIC, sh_flags, (SHF_ALLOC | SHF_WRITE)); */
 		if (sh_type == SHT_NOBITS && sh_flags == (SHF_ALLOC | SHF_WRITE))
 			c = 'B';
 		else if ((sh_type == SHT_PROGBITS || sh_type == SHT_RELA ||
@@ -82,10 +82,10 @@ char get_type64(t_file *file, t_symbol *symbol) {
 			c = 'R';
 		else if (sh_type == SHT_PROGBITS && sh_flags == (SHF_ALLOC | SHF_WRITE))
 			c = 'D';
+		else if (sh_type == SHT_DYNAMIC || sh_type == SHT_FINI_ARRAY || sh_type == SHT_INIT_ARRAY)
+			c = 'D';
 		else if (sh_type == SHT_PROGBITS && sh_flags == (SHF_ALLOC | SHF_EXECINSTR))
 			c = 'T';
-		else if (sh_type == SHT_DYNAMIC)
-			c = 'D';
 		else
 			c = ('t' - 32);
 	}
