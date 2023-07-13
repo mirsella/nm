@@ -41,17 +41,16 @@ static unsigned char   get_special_type(const char *name, char type, unsigned in
   return (type);
 }
 
-char get_type64(t_file *file, t_symbol *symbol) {
+char get_type32(t_file *file, t_symbol *symbol) {
   unsigned int c, bind, type;
   uint16_t st_shndx, e_shnum;
-  uint32_t sh_type;
-  uint64_t sh_flags;
+  uint32_t sh_type, sh_flags;
 
   c = '?';
-  bind = ELF64_ST_BIND(symbol->sym64->st_info);
-  type = ELF64_ST_TYPE(symbol->sym64->st_info);
-  st_shndx = symbol->sym64->st_shndx;
-  e_shnum = file->ehdr64->e_shnum;
+  bind = ELF32_ST_BIND(symbol->sym32->st_info);
+  type = ELF32_ST_TYPE(symbol->sym32->st_info);
+  st_shndx = symbol->sym32->st_shndx;
+  e_shnum = file->ehdr32->e_shnum;
 
   if (bind == STB_GNU_UNIQUE)
     c = 'u';
@@ -70,8 +69,8 @@ char get_type64(t_file *file, t_symbol *symbol) {
   else if (st_shndx == SHN_COMMON)
     c = 'C';
   else if (st_shndx < e_shnum) {
-    sh_type = file->shdr64[st_shndx].sh_type;
-    sh_flags = file->shdr64[st_shndx].sh_flags;
+    sh_type = file->shdr32[st_shndx].sh_type;
+    sh_flags = file->shdr32[st_shndx].sh_flags;
     /* printf("sh_type: %d, sh_flags: %lu\n", sh_type, sh_flags); */
     if (sh_type == SHT_NOBITS && sh_flags == (SHF_ALLOC | SHF_WRITE))
       c = 'B';

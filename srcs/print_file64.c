@@ -9,15 +9,13 @@ int	print_symbols64(t_file *file, t_options *options) {
     if (symbol->sym64->st_shndx == SHN_UNDEF)
       ft_printf("%16c %c %s\n", ' ', symbol->type, symbol->name);
     else
-      ft_printf("%016x %c %s\n", *symbol->addr64, symbol->type, symbol->name);
+      ft_printf("%016x %c %s\n", symbol->sym64->st_value, symbol->type, symbol->name);
     symbols = symbols->next;
   }
   return 0;
 }
 
 int	print_file64(t_file *file, t_options *options) {
-  (void)options;
-
   Elf64_Ehdr *header = file->data;
   file->ehdr64 = header;
   if (header->e_shoff > (size_t)file->stat.st_size)
@@ -76,7 +74,6 @@ int	print_file64(t_file *file, t_options *options) {
       return ft_putstr("memory allocation failed\n"), -1;
     bzero(symbol, sizeof(t_symbol));
     symbol->sym64 = sym;
-    symbol->addr64 = &symbol_table[i].st_value;
     symbol->name = strtab + symbol_table[i].st_name;
     symbol->index = st_shndx;
     if (symbol_table[i].st_shndx < header->e_shnum) {
@@ -91,7 +88,8 @@ int	print_file64(t_file *file, t_options *options) {
   }
 
   if (!options->no_sort) {
-    ft_lstsort(&file->symbols, &compare_symbol64);
+    ft_lstsort(&file->symbols, &compare_value);
+    ft_lstsort(&file->symbols, &compare_symbol);
     if (options->reverse_sort)
       ft_lstreverse(&file->symbols);
   }

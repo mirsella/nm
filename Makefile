@@ -4,7 +4,7 @@ DEPS = $(SRCS:.c=.d)
 
 CC = cc
 CFLAGS = -Wall -Wextra -Werror -MMD
-CFLAGS += -g3
+# CFLAGS += -g3
 # CFLAGS += -fsanitize=address
 
 LIBFT = libft/libft.a

@@ -24,10 +24,8 @@ typedef struct {
 
 typedef struct {
 	Elf64_Sym *sym64;
-	Elf64_Addr *addr64;
 
 	Elf32_Sym *sym32;
-	Elf32_Addr *addr32;
 	char *name;
 	uint16_t index;
   char type;
@@ -55,15 +53,14 @@ void empty_file(t_file *file);
 // init_file.c
 int	init_file(t_file *file);
 
-// print_file.c
+// print_file[64,32].c
 int	print_file64(t_file *file, t_options *options);
-
-// print_file.c
 int	print_file32(t_file *file, t_options *options);
 
-// print_symbol.c
+// get_type[64,32].c
 char get_type64(t_file *file, t_symbol *symbol);
 char get_type32(t_file *file, t_symbol *symbol);
 
 // sort.c
-int compare_symbol64(void *a, void *b);
+int compare_symbol(void *a, void *b);
+int compare_value(void *a, void *b);
