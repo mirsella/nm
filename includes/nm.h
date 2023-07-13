@@ -30,6 +30,7 @@ typedef struct {
 	Elf32_Addr *addr32;
 	char *name;
 	uint16_t index;
+  char type;
 } t_symbol;
 
 typedef struct {
@@ -61,7 +62,8 @@ int	print_file64(t_file *file, t_options *options);
 int	print_file32(t_file *file, t_options *options);
 
 // print_symbol.c
-int	print_symbol64(t_file *file, t_symbol *symbol);
 char get_type64(t_file *file, t_symbol *symbol);
-int	print_symbol32(t_file *file, t_symbol *symbol);
 char get_type32(t_file *file, t_symbol *symbol);
+
+// sort.c
+int compare_symbol64(void *a, void *b);
