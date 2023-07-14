@@ -63,8 +63,9 @@ int	print_file64(t_file *file, t_options *options) {
         st_shndx == SHN_HIPROC || st_shndx == SHN_LOOS || st_shndx == SHN_HIOS ||
         st_shndx == SHN_ABS || st_shndx == SHN_COMMON || st_shndx == SHN_XINDEX ||
         st_shndx == SHN_HIRESERVE) && ELF64_ST_TYPE(sym->st_info) != STT_SECTION) {
-    skipping = 0;
-  }
+      skipping = 0;
+    } else if (ELF64_ST_BIND(sym->st_info) == STB_GLOBAL)
+      skipping = 0;
 
     if (skipping == 1)
       continue;
@@ -74,11 +75,11 @@ int	print_file64(t_file *file, t_options *options) {
       return ft_putstr("memory allocation failed\n"), -1;
     bzero(symbol, sizeof(t_symbol));
     symbol->sym64 = sym;
-    symbol->name = strtab + symbol_table[i].st_name;
+    symbol->name = strtab + sym->st_name;
     symbol->index = st_shndx;
-    if (symbol_table[i].st_shndx < header->e_shnum) {
-      if (ELF64_ST_TYPE(symbol_table[i].st_info) == STT_SECTION)
-        symbol->name = (file->data + sections[header->e_shstrndx].sh_offset) + sections[symbol_table[i].st_shndx].sh_name;
+    if (sym->st_shndx < header->e_shnum) {
+      if (ELF64_ST_TYPE(sym->st_info) == STT_SECTION)
+        symbol->name = (file->data + sections[header->e_shstrndx].sh_offset) + sections[sym->st_shndx].sh_name;
     }
     symbol->type = get_type64(file, symbol);
     t_list *new = ft_lstnew(symbol);

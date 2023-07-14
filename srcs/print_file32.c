@@ -1,4 +1,5 @@
 #include "../includes/nm.h"
+#include <elf.h>
 
 int	print_symbols32(t_file *file, t_options *options) {
   t_list *symbols = file->symbols;
@@ -49,7 +50,7 @@ int	print_file32(t_file *file, t_options *options) {
     uint16_t st_shndx = symbol_table[i].st_shndx;
     Elf32_Sym *sym = &symbol_table[i];
     /* printf("%016lx %02x %02x %04x %04lx %02x %s\n", sym->st_value, sym->st_info, sym->st_other, sym->st_shndx, sym->st_size, sym->st_name, strtab + sym->st_name); */
-    
+
     int skipping = 1;
     if (options->display_undefined) {
       if (st_shndx == SHN_UNDEF)
@@ -63,11 +64,14 @@ int	print_file32(t_file *file, t_options *options) {
         st_shndx == SHN_HIPROC || st_shndx == SHN_LOOS || st_shndx == SHN_HIOS ||
         st_shndx == SHN_ABS || st_shndx == SHN_COMMON || st_shndx == SHN_XINDEX ||
         st_shndx == SHN_HIRESERVE) && ELF32_ST_TYPE(sym->st_info) != STT_SECTION) {
-    skipping = 0;
-  }
+      skipping = 0;
+    } else if (ELF64_ST_BIND(sym->st_info) == STB_GLOBAL)
+      skipping = 0;
 
-    if (skipping == 1)
+    if (skipping == 1) {
+      /* printf("skipping %s, st_shndx %d, st_type %d, bind %d\n", strtab + sym->st_name, st_shndx, ELF32_ST_TYPE(sym->st_info), ELF32_ST_BIND(sym->st_info)); */
       continue;
+    }
 
     t_symbol *symbol = malloc(sizeof(t_symbol));
     if (!symbol)
@@ -76,9 +80,9 @@ int	print_file32(t_file *file, t_options *options) {
     symbol->sym32 = sym;
     symbol->name = strtab + symbol_table[i].st_name;
     symbol->index = st_shndx;
-    if (symbol_table[i].st_shndx < header->e_shnum) {
-      if (ELF32_ST_TYPE(symbol_table[i].st_info) == STT_SECTION)
-        symbol->name = (file->data + sections[header->e_shstrndx].sh_offset) + sections[symbol_table[i].st_shndx].sh_name;
+    if (sym->st_shndx < header->e_shnum) {
+      if (ELF32_ST_TYPE(sym->st_info) == STT_SECTION)
+        symbol->name = (file->data + sections[header->e_shstrndx].sh_offset) + sections[sym->st_shndx].sh_name;
     }
     symbol->type = get_type32(file, symbol);
     t_list *new = ft_lstnew(symbol);
