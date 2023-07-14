@@ -80,6 +80,8 @@ char get_type32(t_file *file, t_symbol *symbol) {
         sh_type == SHT_STRTAB || sh_type == SHT_DYNSYM ||
         sh_type == SHT_NOTE) && sh_flags == SHF_ALLOC)
       c = 'R';
+    else if (sh_flags == 18)
+      c = 'R';
     else if (sh_type == SHT_PROGBITS && sh_flags == (SHF_ALLOC | SHF_WRITE))
       c = 'D';
     else if (sh_type == SHT_DYNAMIC || sh_type == SHT_FINI_ARRAY || sh_type == SHT_INIT_ARRAY)
